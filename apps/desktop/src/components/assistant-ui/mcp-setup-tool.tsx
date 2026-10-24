@@ -41,24 +41,29 @@ import { parseMaybeObject } from './tool/fallback-model/format'
 type SetupAction = McpTarget['action']
 type SetupCopy = ReturnType<typeof useI18n>['t']['assistant']['mcpSetup']
 
+const PRIVATE_PROVENANCE = 'Private: operator-approved, NOT Nous-reviewed'
+
 const SHELL_CLASS = `${WIDGET_SHELL_CLASS} text-[length:var(--conversation-text-font-size)] text-(--ui-text-primary)`
 
 const TITLE = {
   authorize: (copy: SetupCopy) => copy.authorizeTitle,
   enable: (copy: SetupCopy) => copy.enableTitle,
-  install: (copy: SetupCopy) => copy.installTitle
+  install: (copy: SetupCopy) => copy.installTitle,
+  install_custom: (copy: SetupCopy) => `${copy.installTitle} · ${PRIVATE_PROVENANCE}`
 } satisfies Record<SetupAction, (copy: SetupCopy) => string>
 
 const VERB = {
   authorize: (copy: SetupCopy) => copy.authorizeAction,
   enable: (copy: SetupCopy) => copy.enableAction,
-  install: (copy: SetupCopy) => copy.installAction
+  install: (copy: SetupCopy) => copy.installAction,
+  install_custom: (copy: SetupCopy) => copy.installAction
 } satisfies Record<SetupAction, (copy: SetupCopy) => string>
 
 const DONE = {
   authorize: (copy: SetupCopy, server: string) => copy.authorized(server),
   enable: (copy: SetupCopy, server: string) => copy.enabled(server),
-  install: (copy: SetupCopy, server: string) => copy.installed(server)
+  install: (copy: SetupCopy, server: string) => copy.installed(server),
+  install_custom: (copy: SetupCopy, server: string) => `${copy.installed(server)} · ${PRIVATE_PROVENANCE}`
 } satisfies Record<SetupAction, (copy: SetupCopy, server: string) => string>
 
 /** The row's one verb. `approve` is the user's consent, `working` is the backend acting on it, `open`
@@ -127,7 +132,8 @@ function McpSetupSummary({ action, rows }: { action: SetupAction; rows: SettledT
           <ConnectorSummary
             connector={{ name: row.name, title }}
             key={row.name}
-            meta={connected && row.tools > 0 ? `${line} · ${copy.toolCount(row.tools)}` : line}
+            meta={connected && row.tools > 0 ? `${line} · ${copy.toolCount(row.tools)}`
+              : action === 'install_custom' && !connected ? `${line} · ${PRIVATE_PROVENANCE}` : line}
             tone={connected ? 'ok' : undefined}
           />
         )
@@ -394,6 +400,9 @@ function McpSetupRow({ action, onReissue, reissueBlocked, reissuing, request, ta
 
   return (
     <>
+      {action === 'install_custom' && target.instructions ? (
+        <p className="whitespace-pre-wrap break-words text-sm" role="note">{target.instructions}</p>
+      ) : null}
       <ConnectorRow
         action={verb === 'none' ? undefined : ACTIONS[verb]}
         connector={{ name: server, title: displayServer }}

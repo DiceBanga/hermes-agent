@@ -8,7 +8,7 @@ from typing import Any, List, Optional, Set, Tuple
 logger = logging.getLogger(__name__)
 
 CONNECTOR_ACTIONS = ("display", "status", "connect", "reconnect", "rename")
-MCP_ACTIONS = ("install", "enable", "authorize")
+MCP_ACTIONS = ("install", "install_custom", "enable", "authorize")
 ALL_ACTIONS = CONNECTOR_ACTIONS + MCP_ACTIONS
 
 _TARGET_FIELDS = frozenset({"name", "mcp", "alias", "to"})

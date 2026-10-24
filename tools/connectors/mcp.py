@@ -824,6 +824,13 @@ def run_mcp_operation(
     tool_call_id: Optional[str] = None,
     backend: Any = None,
 ) -> str:
+    if action == "install_custom":
+        from tools.connectors.private_mcp import run_private_mcp_operation
+
+        return run_private_mcp_operation(
+            names, connection_callback=connection_callback,
+            session_id=session_id, tool_call_id=tool_call_id,
+        )
     error = validate_mcp_names(action, names)
     if error:
         return tool_error(error)
