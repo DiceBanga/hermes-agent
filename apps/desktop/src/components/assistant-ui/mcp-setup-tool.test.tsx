@@ -4,7 +4,7 @@ import { atom } from 'nanostores'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { type SessionView, SessionViewProvider } from '@/app/chat/session-view'
-import { McpSetupPending, McpSetupTool } from '@/components/assistant-ui/mcp-setup-tool'
+import { McpSetupOffer, McpSetupPending, McpSetupTool } from '@/components/assistant-ui/mcp-setup-tool'
 import { I18nProvider } from '@/i18n'
 import {
   $connectionRequests,
@@ -109,6 +109,29 @@ afterEach(() => {
 })
 
 describe('the MCP setup card', () => {
+  it('shows private provenance and profile before zero-field approval', () => {
+    const instructions = 'Private approval digest abc123; profile /isolated/jarvis.'
+    render(
+      <I18nProvider configClient={null} initialLocale="en">
+        <McpSetupOffer action="install_custom" owner={null}
+          request={{ ...REQUEST, targets: [{ ...LINEAR, instructions }] }} />
+      </I18nProvider>
+    )
+    expect(screen.getByText(/NOT Nous-reviewed/)).toBeTruthy()
+    expect(screen.getByText(instructions)).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Install' })).toBeTruthy()
+  })
+
+  it('keeps private provenance in the settled summary', () => {
+    const result = { targets: [{ name: 'linear', state: 'connected', tools: [] }] }
+    render(
+      <I18nProvider configClient={null} initialLocale="en">
+        <McpSetupTool {...props(result)} args={{ ...ARGS, action: 'install_custom' }} />
+      </I18nProvider>
+    )
+    expect(screen.getByText(/NOT Nous-reviewed/)).toBeTruthy()
+  })
+
   it('opens required details from the row action and sends the approved environment', async () => {
     const rpc = vi.fn().mockResolvedValue({ status: 'ok', settled: false })
 
